@@ -34,6 +34,13 @@ public class PlayerStats : MonoBehaviour
 
     void Update()
     {
+        if (currentHealth <= 0)
+        {
+            Destroy(gameObject);
+        }
+        // Logika śmierci gracza, np. restart poziomu lub zakończenie gry
+        Debug.Log("Player died.");
+
         healthBar.SetHp(currentHealth/maxHealth);
         Debug.Log("Regen" + healthRegenerationRate);
     if (healthRegenerationRate > 0 && currentHealth < maxHealth && regenerationTimeElapsed < healthRegenerationRate)
@@ -71,8 +78,7 @@ public class PlayerStats : MonoBehaviour
 
     private void Die()
     {
-        // Logika śmierci gracza, np. restart poziomu lub zakończenie gry
-        Debug.Log("Player died.");
+        
     }
 
     // Metoda zapobiegająca spadkowi statystyk poniżej bazowych wartości
