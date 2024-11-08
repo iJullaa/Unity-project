@@ -10,6 +10,8 @@ public class Item : ScriptableObject
     public float moveSpeedBonus = 0f;
     public float attackPowerBonus = 0f;
     public float defenseBonus = 0f;
+    public float healthRegenerationBonus = 0f;
+
 
     public void ApplyItem(PlayerStats playerStats)
     {
@@ -17,6 +19,8 @@ public class Item : ScriptableObject
         playerStats.moveSpeed += moveSpeedBonus;
         playerStats.attackPower += attackPowerBonus;
         playerStats.defense += defenseBonus;
+        playerStats.healthRegenerationRate += healthRegenerationBonus;
+
     }
 
     public void RemoveItem(PlayerStats playerStats)
@@ -25,5 +29,8 @@ public class Item : ScriptableObject
         playerStats.moveSpeed -= moveSpeedBonus;
         playerStats.attackPower -= attackPowerBonus;
         playerStats.defense -= defenseBonus;
+        playerStats.healthRegenerationRate -= healthRegenerationBonus;
+
+        playerStats.ClampStats();
     }
 }

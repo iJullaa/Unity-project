@@ -9,11 +9,48 @@ public class PlayerStats : MonoBehaviour
     public float attackPower = 10f;
     public float defense = 5f;
 
-    private float currentHealth;
+    public float healthRegenerationRate = 0f; // Czas trwania regeneracji w sekundach
+    public float regenerationDuration = 5f;   // Czas trwania regeneracji w sekundach
+
+    private float regenerationTimeElapsed = 0f; // Przechowuje czas, który upłynął podczas regeneracji
+
+    public float currentHealth;
+
+    private float baseMaxHealth;
+    private float baseMoveSpeed;
+    private float baseAttackPower;
+    private float baseDefense;
+
+    public HealthBar healthBar;
 
     void Start()
     {
-        currentHealth = maxHealth; // Ustaw zdrowie na maksimum na początku
+        // Zapisujemy bazowe wartości, aby przy usunięciu bonusów można było do nich wrócić
+        baseMaxHealth = maxHealth;
+        baseMoveSpeed = moveSpeed;
+        baseAttackPower = attackPower;
+        baseDefense = defense;
+    }
+
+    void Update()
+    {
+        healthBar.SetHp(currentHealth/maxHealth);
+        Debug.Log("Regen" + healthRegenerationRate);
+    if (healthRegenerationRate > 0 && currentHealth < maxHealth && regenerationTimeElapsed < healthRegenerationRate)
+        {
+            Debug.Log("Regeneracja zdrowia");
+
+            currentHealth += healthRegenerationRate * Time.deltaTime;
+            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+            regenerationTimeElapsed += Time.deltaTime;
+        }
+        else if (currentHealth >= maxHealth || regenerationTimeElapsed >= healthRegenerationRate)
+        {
+            Debug.Log("Regeneracja zakończona");
+            regenerationTimeElapsed = 0f;
+            healthRegenerationRate = 0f;
+        }
     }
 
     public void TakeDamage(float damage)
@@ -26,9 +63,24 @@ public class PlayerStats : MonoBehaviour
             Die();
     }
 
+    public void Heal(float amount)
+    {
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Upewnij się, że zdrowie nie przekracza maksimum
+    }
+
     private void Die()
     {
-        // Logika śmierci gracza, np. restart poziomu
+        // Logika śmierci gracza, np. restart poziomu lub zakończenie gry
         Debug.Log("Player died.");
+    }
+
+    // Metoda zapobiegająca spadkowi statystyk poniżej bazowych wartości
+    public void ClampStats()
+    {
+        maxHealth = Mathf.Max(maxHealth, baseMaxHealth);
+        moveSpeed = Mathf.Max(moveSpeed, baseMoveSpeed);
+        attackPower = Mathf.Max(attackPower, baseAttackPower);
+        defense = Mathf.Max(defense, baseDefense);
     }
 }

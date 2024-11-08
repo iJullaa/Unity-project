@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4956b73a640c33341a3c7e40b2080243, type: 3}
   m_Name: Boots
   m_EditorClassIdentifier: 
-  itemName: 
+  itemName: Iron Boots
   healthBonus: 0
   moveSpeedBonus: 5
   attackPowerBonus: 0

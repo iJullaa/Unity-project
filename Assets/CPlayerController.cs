@@ -5,7 +5,7 @@ using UnityEngine;
 public class CPlayerController : MonoBehaviour
 {
     Rigidbody rb;
-    public float force = 10.0f;           // Normalna prędkość ruchu
+    public float force = 3.0f;           // Normalna prędkość ruchu
     public float forceTurn = 10.0f;       // Siła obrotu
     public float jumpForce = 5.0f;        // Siła skoku
 
@@ -26,6 +26,12 @@ public class CPlayerController : MonoBehaviour
     private Vector3 originalScale;        // Oryginalna skala postaci
     public Vector3 crouchScale = new Vector3(1, 0.5f, 1);  // Skala przy kucaniu
     public Vector3 crawlScale = new Vector3(1, 0.3f, 1);   // Skala przy czołganiu
+
+    public GameObject ItemBomb;    // Prefab bomby, który gracz będzie mógł położyć
+    public Item ItemBombPickup;   
+    public float bombDropHeight = 1.0f; // Wysokość na jaką bomba będzie umieszczona nad ziemią
+
+    private GameObject currentBomb;  // Zmienna przechowująca obiekt bomby, jeśli został już położony
 
     void Start()
     {
@@ -110,12 +116,28 @@ public class CPlayerController : MonoBehaviour
             rb.AddForce(-transform.right * currentForce);
         }
 
-        // Skok (Space) - double jump
-        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < 2)
+        // Skok (Space) - double jump, sprawdzamy czy postać jest na ziemi lub jest to drugi skok
+        if (Input.GetKeyDown(KeyCode.Space) && (isGrounded || jumpCount < 2))
         {
+            Debug.Log(jumpCount);
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            jumpCount++; // Zwiększ licznik skoków
+            isGrounded = false; // Przy pierwszym skoku ustaw isGrounded na false
+            jumpCount++;        // Zwiększ licznik skoków
         }
+
+        // Obsługa kładzenia bomby (np. klawisz "R")
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Debug.Log("Klikam R");
+            Inventory playerInventory = GetComponent<Inventory>();
+            if(playerInventory.GetItemCount(ItemBombPickup)!=0)
+            {
+                Debug.Log("Mialem bombe");
+                DropBomb();
+                playerInventory.RemoveItem(ItemBombPickup);
+            }
+        }
+        //Debug.Log("Bomba: " + ItemBomb);
     }
 
     // Funkcja dla dasha
@@ -129,6 +151,57 @@ public class CPlayerController : MonoBehaviour
 
         isDashing = false; // Zakończ dash
     }
+
+    
+    
+
+    // Funkcja do kładzenia bomby pod postacią
+    private void DropBomb()
+    {
+        Debug.Log("Wchodze do dropbomb");
+        // Upewnij się, że ItemBomb jest przypisany i currentBomb jest null
+        if (ItemBomb != null && isGrounded)
+        {
+            Debug.Log("Mam bombe");
+            // Ustaw pozycję bomby poniżej gracza
+            Vector3 bombPosition = transform.position + new Vector3(0, bombDropHeight, 0);
+
+            // Utwórz instancję bomby
+            Debug.Log("Tworze bombe" + ItemBomb);
+            currentBomb = Instantiate(ItemBomb, bombPosition, Quaternion.identity);
+            currentBomb.gameObject.SetActive(true);
+
+            // Zniszcz bombę po wybuchu
+            StartCoroutine(DestroyBombOnExplosion(currentBomb));
+
+            
+        }
+            else if (ItemBomb == null)
+            {
+                Debug.LogWarning("Prefab ItemBomb nie jest przypisany w Inspektorze.");
+                Debug.Log(ItemBomb);
+                Debug.Log(isGrounded);
+                Debug.Log(currentBomb);
+            }
+    }
+
+
+
+    private IEnumerator DestroyBombOnExplosion(GameObject bomb)
+    {
+        if (bomb != null)
+        {
+            yield return new WaitForSeconds(bomb.GetComponent<Bomb>().explosionDelay);
+
+            if (bomb != null)
+            {
+                Destroy(bomb); // Zniszcz bombę
+            }
+
+            currentBomb = null; // Ustaw currentBomb na null po zniszczeniu
+        }
+    }
+
 
     // Funkcja sprawdzająca, czy postać dotknęła podłoża
     private void OnCollisionEnter(Collision collision)

@@ -13,6 +13,7 @@ public class ItemPickup : MonoBehaviour
         {
             playerInventory.AddItem(item);
             Destroy(gameObject); // Usuń przedmiot z mapy po podniesieniu
+            Debug.Log(playerInventory);
         }
     }
 }
