@@ -21,6 +21,8 @@ public class PlayerStats : MonoBehaviour
     private float baseAttackPower;
     private float baseDefense;
 
+    public bool dead = false;
+
     public HealthBar healthBar;
 
     void Start()
@@ -36,11 +38,13 @@ public class PlayerStats : MonoBehaviour
     {
         if (currentHealth <= 0)
         {
-            Destroy(gameObject);
+            dead = true;
         }
-        // Logika śmierci gracza, np. restart poziomu lub zakończenie gry
-        Debug.Log("Player died.");
-
+        else
+        {
+            dead = false;
+        }
+        
         healthBar.SetHp(currentHealth/maxHealth);
         Debug.Log("Regen" + healthRegenerationRate);
     if (healthRegenerationRate > 0 && currentHealth < maxHealth && regenerationTimeElapsed < healthRegenerationRate)
@@ -67,18 +71,16 @@ public class PlayerStats : MonoBehaviour
             currentHealth -= finalDamage;
 
         if (currentHealth <= 0)
-            Die();
+        {
+            dead = true;
+        }
+            
     }
 
     public void Heal(float amount)
     {
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Upewnij się, że zdrowie nie przekracza maksimum
-    }
-
-    private void Die()
-    {
-        
     }
 
     // Metoda zapobiegająca spadkowi statystyk poniżej bazowych wartości

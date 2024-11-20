@@ -1,12 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Generic; // 
 using UnityEngine;
 
 public class CPlayerController : MonoBehaviour
 {
     Rigidbody rb;
     public float force = 3.0f;           // Normalna prędkość ruchu
-    public float forceTurn = 10.0f;       // Siła obrotu
     public float jumpForce = 5.0f;        // Siła skoku
 
     public float sprintMultiplier = 1.5f; // Mnożnik prędkości przy sprincie
@@ -19,7 +18,6 @@ public class CPlayerController : MonoBehaviour
     private bool isGrounded = true;       // Czy postać dotyka podłoża
     private bool isCrouching = false;     // Czy postać jest w pozycji kucającej
     private bool isCrawling = false;      // Czy postać jest w pozycji czołgającej się
-    private bool isDashing = false;       // Czy postać wykonuje dash
     private int jumpCount = 0;            // Licznik skoków dla double jump
 
     private float lastWPressTime = -1f;   // Czas ostatniego naciśnięcia W
@@ -33,6 +31,10 @@ public class CPlayerController : MonoBehaviour
 
     private GameObject currentBomb;  // Zmienna przechowująca obiekt bomby, jeśli został już położony
 
+    public Animator ani; // Animator postaci
+
+    public PlayerStats playerStats; // Referencja do statystyk gracza
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,24 +43,35 @@ public class CPlayerController : MonoBehaviour
 
     void Update()
     {
+        if (playerStats.dead == false)
+
+            
+        {
+        ani.SetBool("Dead", false);
+
         // Ustawienie aktualnej prędkości na podstawie sprintu, kucania i czołgania
         float currentForce = force;
 
         // Sprint (Shift) zwiększa prędkość, jeśli postać nie jest w pozycji kucającej ani czołgającej się
-        if (Input.GetKey(KeyCode.LeftShift) && !isCrouching && !isCrawling)
+        if (Input.GetButton("Sprint") && !isCrouching && !isCrawling)
         {
+            ani.SetBool("Run", true);
             currentForce *= sprintMultiplier;
+        }
+        else
+        {
+            ani.SetBool("Run", false);
         }
 
         // Kucanie (Ctrl)
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+        if (Input.GetButtonDown("Crouch"))
         {
             isCrouching = true;
             isCrawling = false;
             currentForce *= crouchMultiplier;
             transform.localScale = crouchScale;
         }
-        else if (Input.GetKeyUp(KeyCode.LeftControl))
+        else if (Input.GetButtonUp("Crouch"))
         {
             isCrouching = false;
             if (!isCrawling) // Przywróć oryginalny rozmiar, jeśli nie jest w pozycji czołgającej się
@@ -68,7 +81,7 @@ public class CPlayerController : MonoBehaviour
         }
 
         // Czołganie (C)
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetButtonDown("Crawl"))
         {
             isCrawling = !isCrawling; // Przełącz stan czołgania
             isCrouching = false;
@@ -86,47 +99,66 @@ public class CPlayerController : MonoBehaviour
         }
 
         // Ruch do przodu (W) i wykrycie podwójnego naciśnięcia dla dasha
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetButtonDown("Vertical") && Input.GetAxis("Vertical") > 0)
         {
-            // Sprawdzenie, czy naciśnięcie jest podwójne
-            if (Time.time - lastWPressTime < doubleTapTime && !isDashing)
+            if (Time.time - lastWPressTime < doubleTapTime)
             {
+                 ani.SetTrigger("Roll");
                 StartCoroutine(Dash());
             }
             lastWPressTime = Time.time;
         }
 
         // Ruch do przodu (W) i do tyłu (S)
-        if (Input.GetKey(KeyCode.W) && !isDashing)
+        if (Input.GetAxis("Vertical") > 0)
         {
+            ani.SetBool("Move", true);
             rb.AddForce(transform.forward * currentForce);
         }
-        if (Input.GetKey(KeyCode.S))
+        
+        if (Input.GetAxis("Vertical") < 0)
         {
+            ani.SetBool("Move", true);
             rb.AddForce(-transform.forward * currentForce);
         }
 
         // Ruch w prawo (D) i w lewo (A)
-        if (Input.GetKey(KeyCode.D))
+        if (Input.GetAxis("Horizontal") > 0)
         {
+            ani.SetBool("Move", true);
             rb.AddForce(transform.right * currentForce);
         }
-        if (Input.GetKey(KeyCode.A))
+
+        if (Input.GetAxis("Horizontal") < 0)
         {
+            ani.SetBool("Move", true);
             rb.AddForce(-transform.right * currentForce);
         }
 
+        if (Input.GetAxis("Horizontal") == 0 && Input.GetAxis("Vertical") == 0)
+        {
+            ani.SetBool("Move", false);
+        }
+
         // Skok (Space) - double jump, sprawdzamy czy postać jest na ziemi lub jest to drugi skok
-        if (Input.GetKeyDown(KeyCode.Space) && (isGrounded || jumpCount < 2))
+        if (Input.GetButtonDown("Jump") && (isGrounded || jumpCount < 2))
         {
             Debug.Log(jumpCount);
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             isGrounded = false; // Przy pierwszym skoku ustaw isGrounded na false
+
+            if (jumpCount == 0){
+            ani.SetTrigger("Jump");
+            }
+            else {
+            ani.SetTrigger("DoubleJump");
+            }
+            
             jumpCount++;        // Zwiększ licznik skoków
         }
 
         // Obsługa kładzenia bomby (np. klawisz "R")
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetButton("Use"))
         {
             Debug.Log("Klikam R");
             Inventory playerInventory = GetComponent<Inventory>();
@@ -138,22 +170,22 @@ public class CPlayerController : MonoBehaviour
             }
         }
         //Debug.Log("Bomba: " + ItemBomb);
+        } 
+        else
+        {
+            ani.SetBool("Dead", true);
+        }
+        
     }
 
     // Funkcja dla dasha
     private IEnumerator Dash()
     {
-        isDashing = true; // Ustaw, że postać wykonuje dash
         rb.AddForce(transform.forward * dashForce, ForceMode.Impulse);
 
         // Poczekaj na zakończenie czasu dasha
         yield return new WaitForSeconds(dashDuration);
-
-        isDashing = false; // Zakończ dash
     }
-
-    
-    
 
     // Funkcja do kładzenia bomby pod postacią
     private void DropBomb()
@@ -174,7 +206,6 @@ public class CPlayerController : MonoBehaviour
             // Zniszcz bombę po wybuchu
             StartCoroutine(DestroyBombOnExplosion(currentBomb));
 
-            
         }
             else if (ItemBomb == null)
             {
@@ -184,8 +215,6 @@ public class CPlayerController : MonoBehaviour
                 Debug.Log(currentBomb);
             }
     }
-
-
 
     private IEnumerator DestroyBombOnExplosion(GameObject bomb)
     {
@@ -202,12 +231,15 @@ public class CPlayerController : MonoBehaviour
         }
     }
 
-
     // Funkcja sprawdzająca, czy postać dotknęła podłoża
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
+            if (isGrounded == false)
+            {
+                ani.SetTrigger("Land");
+            }
             isGrounded = true; // Postać dotyka podłoża
             jumpCount = 0;     // Zresetuj licznik skoków
         }

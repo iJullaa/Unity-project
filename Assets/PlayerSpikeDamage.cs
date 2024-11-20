@@ -8,6 +8,9 @@ public class PlayerSpikeDamage : MonoBehaviour
     private bool isOnSpikes = false;     // Flaga czy gracz stoi na kolcach
     private PlayerStats playerStats;     // Referencja do statystyk gracza
 
+    public Animator ani; // Animator postaci
+
+
     void Start()
     {
         // Pobierz komponent PlayerStats, który przechowuje zdrowie gracza
@@ -15,13 +18,27 @@ public class PlayerSpikeDamage : MonoBehaviour
         playerStats.currentHealth = playerStats.maxHealth; // Ustaw zdrowie na maksimum na początku
     }
     
+    void Update()
+    {
+        if (isOnSpikes && playerStats.currentHealth > 0)
+        {
+            ani.SetTrigger("Hit");
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         // Sprawdź, czy gracz wszedł na obiekt z tagiem "Spikes"
         if (other.CompareTag("Spikes"))
         {
             isOnSpikes = true;
-            StartCoroutine(DamageOverTime());  // Rozpocznij zadawanie obrażeń w czasie
+            if (playerStats.currentHealth > 0){
+                StartCoroutine(DamageOverTime());  // Rozpocznij zadawanie obrażeń w czasie
+            }
+            else
+            {
+                isOnSpikes = false;
+            }
             Debug.Log("Gracz wszedł na kolce.");
         }
     }
@@ -43,6 +60,11 @@ public class PlayerSpikeDamage : MonoBehaviour
         {
             if (playerStats != null)
             {
+                if (playerStats.currentHealth <= 0)
+                {
+                    isOnSpikes = false;
+                    break;
+                }
                 playerStats.TakeDamage(damagePerSecond * damageInterval);  // Zadaj obrażenia
                 Debug.Log("Zdrowie gracza: " + playerStats.currentHealth);
             }
