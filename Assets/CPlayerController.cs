@@ -1,6 +1,7 @@
 ﻿using System.Collections;
-using System.Collections.Generic; // 
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CPlayerController : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class CPlayerController : MonoBehaviour
     public Vector3 crawlScale = new Vector3(1, 0.3f, 1);   // Skala przy czołganiu
 
     public GameObject ItemBomb;    // Prefab bomby, który gracz będzie mógł położyć
-    public Item ItemBombPickup;   
+    public Item ItemBombPickup;
     public float bombDropHeight = 1.0f; // Wysokość na jaką bomba będzie umieszczona nad ziemią
 
     private GameObject currentBomb;  // Zmienna przechowująca obiekt bomby, jeśli został już położony
@@ -34,186 +35,163 @@ public class CPlayerController : MonoBehaviour
     public Animator ani; // Animator postaci
 
     public PlayerStats playerStats; // Referencja do statystyk gracza
+    public Camera mainCamera; // Kamera gracza
+
+    private Vector3 moveDirection = Vector3.zero; // Kierunek ruchu
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         originalScale = transform.localScale; // Zapisz oryginalną skalę postaci
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main; // Pobierz główną kamerę, jeśli nie została przypisana
+        }
     }
 
     void Update()
     {
         if (playerStats.dead == false)
+        {
+            ani.SetBool("Dead", false);
 
-            
-        {
-        ani.SetBool("Dead", false);
+            // Ustawienie aktualnej prędkości na podstawie sprintu, kucania i czołgania
+            float currentForce = force;
 
-        // Ustawienie aktualnej prędkości na podstawie sprintu, kucania i czołgania
-        float currentForce = force;
-
-        // Sprint (Shift) zwiększa prędkość, jeśli postać nie jest w pozycji kucającej ani czołgającej się
-        if (Input.GetButton("Sprint") && !isCrouching && !isCrawling)
-        {
-            ani.SetBool("Run", true);
-            currentForce *= sprintMultiplier;
-        }
-        else
-        {
-            ani.SetBool("Run", false);
-        }
-
-        // Kucanie (Ctrl)
-        if (Input.GetButtonDown("Crouch"))
-        {
-            isCrouching = true;
-            isCrawling = false;
-            currentForce *= crouchMultiplier;
-            transform.localScale = crouchScale;
-        }
-        else if (Input.GetButtonUp("Crouch"))
-        {
-            isCrouching = false;
-            if (!isCrawling) // Przywróć oryginalny rozmiar, jeśli nie jest w pozycji czołgającej się
+            if (Input.GetButton("Sprint") && !isCrouching && !isCrawling)
             {
-                transform.localScale = originalScale;
-            }
-        }
-
-        // Czołganie (C)
-        if (Input.GetButtonDown("Crawl"))
-        {
-            isCrawling = !isCrawling; // Przełącz stan czołgania
-            isCrouching = false;
-            currentForce *= crawlMultiplier;
-
-            // Zmiana skali na podstawie stanu czołgania
-            if (isCrawling)
-            {
-                transform.localScale = crawlScale;
+                ani.SetBool("Run", true);
+                currentForce *= sprintMultiplier;
             }
             else
             {
-                transform.localScale = originalScale;
+                ani.SetBool("Run", false);
             }
-        }
 
-        // Ruch do przodu (W) i wykrycie podwójnego naciśnięcia dla dasha
-        if (Input.GetButtonDown("Vertical") && Input.GetAxis("Vertical") > 0)
-        {
-            if (Time.time - lastWPressTime < doubleTapTime)
+            if (Input.GetButtonDown("Crouch"))
             {
-                 ani.SetTrigger("Roll");
-                StartCoroutine(Dash());
+                isCrouching = true;
+                isCrawling = false;
+                currentForce *= crouchMultiplier;
+                transform.localScale = crouchScale;
             }
-            lastWPressTime = Time.time;
-        }
-
-        // Ruch do przodu (W) i do tyłu (S)
-        if (Input.GetAxis("Vertical") > 0)
-        {
-            ani.SetBool("Move", true);
-            rb.AddForce(transform.forward * currentForce);
-        }
-        
-        if (Input.GetAxis("Vertical") < 0)
-        {
-            ani.SetBool("Move", true);
-            rb.AddForce(-transform.forward * currentForce);
-        }
-
-        // Ruch w prawo (D) i w lewo (A)
-        if (Input.GetAxis("Horizontal") > 0)
-        {
-            ani.SetBool("Move", true);
-            rb.AddForce(transform.right * currentForce);
-        }
-
-        if (Input.GetAxis("Horizontal") < 0)
-        {
-            ani.SetBool("Move", true);
-            rb.AddForce(-transform.right * currentForce);
-        }
-
-        if (Input.GetAxis("Horizontal") == 0 && Input.GetAxis("Vertical") == 0)
-        {
-            ani.SetBool("Move", false);
-        }
-
-        // Skok (Space) - double jump, sprawdzamy czy postać jest na ziemi lub jest to drugi skok
-        if (Input.GetButtonDown("Jump") && (isGrounded || jumpCount < 2))
-        {
-            Debug.Log(jumpCount);
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false; // Przy pierwszym skoku ustaw isGrounded na false
-
-            if (jumpCount == 0){
-            ani.SetTrigger("Jump");
-            }
-            else {
-            ani.SetTrigger("DoubleJump");
-            }
-            
-            jumpCount++;        // Zwiększ licznik skoków
-        }
-
-        // Obsługa kładzenia bomby (np. klawisz "R")
-        if (Input.GetButton("Use"))
-        {
-            Debug.Log("Klikam R");
-            Inventory playerInventory = GetComponent<Inventory>();
-            if(playerInventory.GetItemCount(ItemBombPickup)!=0)
+            else if (Input.GetButtonUp("Crouch"))
             {
-                Debug.Log("Mialem bombe");
-                DropBomb();
-                playerInventory.RemoveItem(ItemBombPickup);
+                isCrouching = false;
+                if (!isCrawling)
+                {
+                    transform.localScale = originalScale;
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.W) && Input.GetAxisRaw("Vertical") > 0) // Tylko jeśli wciśnięto W i gracz porusza się do przodu
+            {
+                if (Time.time - lastWPressTime < doubleTapTime)  // Sprawdzenie, czy czas między naciśnięciami "W" jest mniejszy niż dozwolony czas
+                {
+                    ani.SetTrigger("Roll");  // Aktywacja animacji roll (przewrotu)
+                    StartCoroutine(Dash(rb));  // Uruchomienie funkcji Dash
+                }
+                lastWPressTime = Time.time;  // Zaktualizowanie czasu ostatniego naciśnięcia
+            }
+
+
+            if (Input.GetButtonDown("Crawl"))
+            {
+                isCrawling = !isCrawling;
+                isCrouching = false;
+                currentForce *= crawlMultiplier;
+
+                transform.localScale = isCrawling ? crawlScale : originalScale;
+            }
+
+            // Pobieranie wejść od użytkownika
+            float vertical = Input.GetAxisRaw("Vertical");
+            float horizontal = Input.GetAxisRaw("Horizontal");
+
+            // Obliczanie kierunku kamery
+            Vector3 forward = mainCamera.transform.forward;
+            forward.y = 0; // Wykluczamy zmiany w pionie
+            forward.Normalize();
+
+            Vector3 right = mainCamera.transform.right;
+            right.y = 0; // Wykluczamy zmiany w pionie
+            right.Normalize();
+
+            // Tworzymy wektor ruchu w zależności od wejść gracza
+            moveDirection = forward * vertical + right * horizontal;
+
+            // Sprawdzenie, czy gracz się porusza, i czy upłynęła odpowiednia ilość czasu
+            if (moveDirection.magnitude > 0.1f && Time.time - lastWPressTime > 0.3f)  // moveDirection.magnitude sprawdza, czy ruch jest wystarczająco duży (czy gracz się porusza) oraz sprawdza, czy od ostatniego naciśnięcia "W" minęła co najmniej sekunda
+            {
+                ani.SetBool("Move", true);  // Jeśli gracz się porusza, ustaw animację ruchu
+            }
+            else
+            {
+                ani.SetBool("Move", false);  // Jeśli gracz nie porusza się, ustaw animację bez ruchu
+            }
+
+
+            // Dodajemy siłę do rigidbody w odpowiednim kierunku
+            rb.AddForce(moveDirection.normalized * currentForce);
+
+            if (Input.GetButtonDown("Jump") && (isGrounded || jumpCount < 2))
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                isGrounded = false;
+                ani.SetTrigger(jumpCount == 0 ? "Jump" : "DoubleJump");
+                jumpCount++;
+            }
+
+            if (Input.GetButton("Use"))
+            {
+                Inventory playerInventory = GetComponent<Inventory>();
+                if (playerInventory.GetItemCount(ItemBombPickup) != 0)
+                {
+                    DropBomb();
+                    playerInventory.RemoveItem(ItemBombPickup);
+                }
             }
         }
-        //Debug.Log("Bomba: " + ItemBomb);
-        } 
         else
         {
             ani.SetBool("Dead", true);
         }
-        
     }
 
-    // Funkcja dla dasha
-    private IEnumerator Dash()
+    private IEnumerator Dash(Rigidbody body)
     {
-        rb.AddForce(transform.forward * dashForce, ForceMode.Impulse);
+        // Pobierz kierunek, w którym gracz patrzy
+        Vector3 forward = mainCamera.transform.forward;
+        forward.y = 0; // Wykluczamy zmiany w pionie
+        forward.Normalize();
 
-        // Poczekaj na zakończenie czasu dasha
-        yield return new WaitForSeconds(dashDuration);
+        Vector3 right = mainCamera.transform.right;
+        right.y = 0; // Wykluczamy zmiany w pionie
+        right.Normalize();
+
+        // Kierunek dashowania
+        Vector3 dashDirection = forward * Input.GetAxisRaw("Vertical") + right * Input.GetAxisRaw("Horizontal");
+        if (dashDirection.magnitude > 0.1f)
+        {
+            // Przypisz siłę dashowania do rigidbody
+            body.velocity = dashDirection.normalized * dashForce;
+        }
+
+        yield return new WaitForSeconds(dashDuration);  // Czas trwania dasha
+
+        body.velocity = Vector3.zero;  // Zatrzymaj ruch po dashu
     }
 
-    // Funkcja do kładzenia bomby pod postacią
+
+
     private void DropBomb()
     {
-        Debug.Log("Wchodze do dropbomb");
-        // Upewnij się, że ItemBomb jest przypisany i currentBomb jest null
         if (ItemBomb != null && isGrounded)
         {
-            Debug.Log("Mam bombe");
-            // Ustaw pozycję bomby poniżej gracza
             Vector3 bombPosition = transform.position + new Vector3(0, bombDropHeight, 0);
-
-            // Utwórz instancję bomby
-            Debug.Log("Tworze bombe" + ItemBomb);
             currentBomb = Instantiate(ItemBomb, bombPosition, Quaternion.identity);
             currentBomb.gameObject.SetActive(true);
-
-            // Zniszcz bombę po wybuchu
             StartCoroutine(DestroyBombOnExplosion(currentBomb));
-
         }
-            else if (ItemBomb == null)
-            {
-                Debug.LogWarning("Prefab ItemBomb nie jest przypisany w Inspektorze.");
-                Debug.Log(ItemBomb);
-                Debug.Log(isGrounded);
-                Debug.Log(currentBomb);
-            }
     }
 
     private IEnumerator DestroyBombOnExplosion(GameObject bomb)
@@ -221,27 +199,24 @@ public class CPlayerController : MonoBehaviour
         if (bomb != null)
         {
             yield return new WaitForSeconds(bomb.GetComponent<Bomb>().explosionDelay);
-
             if (bomb != null)
             {
-                Destroy(bomb); // Zniszcz bombę
+                Destroy(bomb);
             }
-
-            currentBomb = null; // Ustaw currentBomb na null po zniszczeniu
+            currentBomb = null;
         }
     }
 
-    // Funkcja sprawdzająca, czy postać dotknęła podłoża
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            if (isGrounded == false)
+            if (!isGrounded)
             {
                 ani.SetTrigger("Land");
             }
-            isGrounded = true; // Postać dotyka podłoża
-            jumpCount = 0;     // Zresetuj licznik skoków
+            isGrounded = true;
+            jumpCount = 0;
         }
     }
 }
