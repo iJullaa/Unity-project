@@ -10,12 +10,15 @@ public class PlayerSpikeDamage : MonoBehaviour
 
     public Animator ani; // Animator postaci
 
+    public GameObject bloodps;
+
 
     void Start()
     {
         // Pobierz komponent PlayerStats, który przechowuje zdrowie gracza
         playerStats = GetComponent<PlayerStats>();
         playerStats.currentHealth = playerStats.maxHealth; // Ustaw zdrowie na maksimum na początku
+        CPlayerController playerController = GetComponent<CPlayerController>();
     }
     
     void Update()
@@ -23,6 +26,14 @@ public class PlayerSpikeDamage : MonoBehaviour
         if (isOnSpikes && playerStats.currentHealth > 0)
         {
             ani.SetTrigger("Hit");
+            Vector3 pos = transform.position;
+            pos.y += 0.75f;
+            Quaternion rot = Quaternion.Euler(0, -90, 0);
+
+            if(Time.frameCount % 70 == 0)
+            {
+                spawnBloodPs(pos, rot);
+            }
         }
     }
 
@@ -70,5 +81,10 @@ public class PlayerSpikeDamage : MonoBehaviour
             }
             yield return new WaitForSeconds(damageInterval);  // Odczekaj przed kolejnymi obrażeniami
         }
+    }
+
+    private void spawnBloodPs(Vector3 SpawnPos, Quaternion SpawnRot)
+    {
+        Instantiate(bloodps, SpawnPos, SpawnRot);
     }
 }
