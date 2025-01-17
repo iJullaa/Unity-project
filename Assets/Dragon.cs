@@ -22,7 +22,7 @@ public class Dragon : MonoBehaviour
             {
                 animator.SetTrigger("die");
             }
-            Destroy(gameObject, 2f); // Usuñ obiekt po 2 sekundach
+            Destroy(gameObject, 5f); // Usuñ obiekt po 2 sekundach
         }
         else
         {
