@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Main menu with parallax FREE/Main Menu Demo.unity
+    guid: 4f8b438458fa30041865000691e86423
+  - enabled: 1
+    path: Assets/Scenes/scena1.unity
+    guid: 8bfcc15a2fc60c348af4b9a125ff8313
   m_configObjects: {}

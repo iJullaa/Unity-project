@@ -39,6 +39,11 @@ public class CPlayerController : MonoBehaviour
 
     private Vector3 moveDirection = Vector3.zero; // Kierunek ruchu
 
+    public float attackRange = 1.5f; // Zasięg ataku miecza
+    public int attackDamage = 20; // Obrażenia zadawane przez miecz
+    public LayerMask enemyLayer; // Warstwa przeciwników
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -155,7 +160,32 @@ public class CPlayerController : MonoBehaviour
         {
             ani.SetBool("Dead", true);
         }
+
+        if (Input.GetButtonDown("Fire1")) // "Fire1" to domyślna akcja dla lewego przycisku myszy
+        {
+            ani.SetTrigger("Attack"); // Odtwórz animację ataku
+            // Sprawdź, czy w zasięgu ataku znajduje się jakiś przeciwnik
+            Collider[] hitEnemies = Physics.OverlapSphere(transform.position, attackRange, enemyLayer);
+            foreach (Collider enemy in hitEnemies)
+            {
+                PerformAttack(enemy);
+            }
+        }
+
     }
+    private void PerformAttack(Collider other)
+    {
+        if (other.CompareTag("Enemy"))
+        {
+            Dragon enemyDragon = other.GetComponent<Dragon>();
+            if (enemyDragon != null)
+            {
+                enemyDragon.TakeDamage(attackDamage); // Zadaj obrażenia przeciwnikowi
+            }
+        }
+    }
+
+
 
     private IEnumerator Dash(Rigidbody body)
     {
