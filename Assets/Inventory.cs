@@ -8,6 +8,7 @@ public class Inventory : MonoBehaviour
     private List<Item> items = new List<Item>();
     public KeyCounter keyCounter;
     public BombCounter bombCounter;
+    public static bool hasKey = false;  // Flaga określająca, czy gracz ma klucz
 
     public void AddItem(Item item)
     {

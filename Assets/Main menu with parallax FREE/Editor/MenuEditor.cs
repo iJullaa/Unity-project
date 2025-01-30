@@ -13,25 +13,11 @@ public class MenuEditor : Editor {
     {
         menu = target as MenuController;
         //base.OnInspectorGUI();
-        string[] labels = new string[] { "Normal Backgrounds", "Parallax Backgrounds"};
-        selectedOption = GUILayout.SelectionGrid(selectedOption, labels, 2);
+        string[] labels = new string[] {"Parallax Backgrounds"};
+        selectedOption = GUILayout.SelectionGrid(selectedOption, labels, 1);
         switch (selectedOption)
         {
             case 0:
-                menu.useParallax = false;
-                menu.useKeys = EditorGUILayout.Toggle("Use keyboard keys",menu.useKeys);
-                EditorGUILayout.HelpBox("If deactivated the menu will only use the ingame arrows.", MessageType.Info);
-                serializedObject.Update();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("mainBackground"), true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("backgrounds"),true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("options"), true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("Select"), true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("SceneSelect"), true);
-                EditorGUILayout.HelpBox("The audio that will be played in the menu.", MessageType.Info);
-                serializedObject.ApplyModifiedProperties();
-                break;
-
-            case 1:
                 menu.useParallax = true;
                 menu.useKeys = EditorGUILayout.Toggle("Use keyboard keys", menu.useKeys);
                 EditorGUILayout.HelpBox("If deactivated the menu will only use the ingame arrows.", MessageType.Info);
@@ -39,8 +25,7 @@ public class MenuEditor : Editor {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("mainBackgroundParallax"), true);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("backgroundsParallax"), true);            
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("options"), true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("Select"), true);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("SceneSelect"), true);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("About"), true);
                 EditorGUILayout.HelpBox("The audio that will be played in the menu.", MessageType.Info);
                 serializedObject.ApplyModifiedProperties();
                 break;

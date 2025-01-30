@@ -6,75 +6,62 @@ using UnityEngine.Events;
 using System.IO;
 using UnityEngine.SceneManagement;
 
-public class MenuController : MonoBehaviour {
+public class MenuController : MonoBehaviour
+{
 
     public static MenuController instance;
 
-    //Active option and bool to check if main menu is active
     private int option = 0;
     private bool mainMenu = true;
 
-    //Check to move the menu using the keys or only the arrows
     [SerializeField, Tooltip("Check to move the menu using the keys or only the arrows")]
     public bool useKeys = true;
 
-    //Check if using parallax or not
+    // Force parallax backgrounds
     public bool useParallax = true;
 
-    //Scenes animation
     private bool isAnimating = false;
     private int activeScene = 1;
     [SerializeField, Tooltip("Animation speed in seconds")]
     public float animSpeed;
 
-    //Option quantity
-    [SerializeField, Tooltip ("Introduce all the options in your menu")]
+    [SerializeField, Tooltip("Introduce all the options in your menu")]
     public string[] options;
 
-    //Backgrounds
-    [SerializeField, Tooltip("Introduce all the backgrounds for the scenes in your menu")]
-    public GameObject[] backgrounds;
     [SerializeField, Tooltip("Introduce all the backgrounds for the scenes in your menu")]
     public GameObject[] backgroundsParallax;
     [SerializeField, Tooltip("Introduce the main bck for your menu")]
     public GameObject mainBackgroundParallax;
-    [SerializeField, Tooltip("Introduce the main bck for your menu")]
-    public GameObject mainBackground;
     [SerializeField, HideInInspector]
     public Text menuText;
     [SerializeField]
     public GameObject[] activeBackground;
 
-    //Arrow Animators
     [SerializeField, HideInInspector]
     public Animator ArrowR;
     [SerializeField, HideInInspector]
     public Animator ArrowL;
 
-    //Menu bar gameobject
     [SerializeField, HideInInspector]
     public GameObject menuBar;
 
-    //Backgrounds Controller
     [SerializeField, HideInInspector]
     public GameObject backgroundsController;
 
-    //Sounds
+    [SerializeField, HideInInspector]
+    public GameObject About;
+
     [Header("Sounds")]
     [Space(10)]
     public AudioClip Select;
-    public AudioClip SceneSelect;
     private AudioSource Audio;
 
-    //Events
     [SerializeField, HideInInspector]
     public UnityEvent[] Events;
 
-    //Exit Menu
     [SerializeField, HideInInspector]
     public GameObject exitMenu;
 
-    //Options menu
     [SerializeField, HideInInspector]
     public GameObject OptionsMenu;
 
@@ -83,36 +70,37 @@ public class MenuController : MonoBehaviour {
     {
         Audio = gameObject.GetComponent<AudioSource>();
         instance = this;
-        //Set the activeBackground array length
-        if (useParallax) { activeBackground = new GameObject[backgroundsParallax.Length]; } else { activeBackground = new GameObject[backgrounds.Length]; }
-        initiate();      
+        activeBackground = new GameObject[backgroundsParallax.Length];
+        initiate();
     }
 
-	void Update () {
+    void Update()
+    {
 
-        if (mainMenu) { 
-        //Changes the text corresponding option
-        menuText.text = options[option];
+        if (mainMenu)
+        {
+            //Changes the text corresponding option
+            menuText.text = options[option];
+            //Deactivate arrows
+            //If the option is less than 1 left arrow deactivated
+            if (option < 1)
+            {
+                ArrowL.SetBool("Deactivate", true);
+            }
+            else
+            {
+                ArrowL.SetBool("Deactivate", false);
+            }
 
-        //Deactivate arrows
-        //If the option is less than 1 left arrow deactivated
-        if(option < 1)
-        {
-            ArrowL.SetBool("Deactivate", true);
-        }else
-        {
-            ArrowL.SetBool("Deactivate", false);
-        }
-
-        //If the option is the last option deactivate right arrow
-        if (option == options.Length-1)
-        {
-            ArrowR.SetBool("Deactivate", true);
-        }
-        else
-        {
-            ArrowR.SetBool("Deactivate", false);
-        }
+            //If the option is the last option deactivate right arrow
+            if (option == options.Length - 1)
+            {
+                ArrowR.SetBool("Deactivate", true);
+            }
+            else
+            {
+                ArrowR.SetBool("Deactivate", false);
+            }
 
             //If use keys is active move with the keys pressed
             if (useKeys)
@@ -140,7 +128,8 @@ public class MenuController : MonoBehaviour {
         if (anim.isPlaying)
         {
             isAnimating = true;
-        }else
+        }
+        else
         {
             isAnimating = false;
         }
@@ -151,44 +140,18 @@ public class MenuController : MonoBehaviour {
     //Initiate
     private void initiate()
     {
-        //If use parallax is active then instantiate the parallax main bck
-        //Else instantiate the normal background
         mainMenu = true;
         menuBar.SetActive(true);
-        if (useParallax)
-        {
-            //Instantiate the background an set the parent to this gameobject
-            //Then reset the scale and position
-            //Set the sibling to first so the background is visible
-            //Then adjust the rect values
-            //And lastly set the active background array position 0 to this background
-            var Bck = Instantiate(mainBackgroundParallax) as GameObject;
-            Bck.transform.SetParent(this.gameObject.transform);
-            Bck.transform.localScale = new Vector3(1, 1, 1);
-            Bck.transform.localPosition = new Vector3(0, 0, 0);
-            Bck.transform.SetSiblingIndex(0);
-            var rect = Bck.GetComponent<RectTransform>();
-            rect.offsetMax = new Vector2(0, 0);
-            rect.offsetMin = new Vector2(0, 0);
-            activeBackground[0] = Bck;
-        }
-        else
-        {
-            //Instantiate the background an set the parent to this gameobject
-            //Then reset the scale and position
-            //Set the sibling to first so the background is visible
-            //Then adjust the rect values
-            //And lastly set the active background array position 0 to this background
-            var Bck = Instantiate(mainBackground) as GameObject;
-            Bck.transform.SetParent(this.gameObject.transform);
-            var rect = Bck.GetComponent<RectTransform>();
-            Bck.transform.SetSiblingIndex(0);
-            rect.transform.localScale = new Vector3(1, 1, 1);
-            rect.transform.localPosition = new Vector3(0, 0, 0);
-            rect.offsetMax = new Vector2(0, 0);
-            rect.offsetMin = new Vector2(0, 0);
-            activeBackground[0] = Bck;
-        }
+        var Bck = Instantiate(mainBackgroundParallax) as GameObject;
+        var cos = Instantiate(About) as GameObject;
+        Bck.transform.SetParent(this.gameObject.transform);
+        Bck.transform.localScale = new Vector3(1, 1, 1);
+        Bck.transform.localPosition = new Vector3(0, 0, 0);
+        Bck.transform.SetSiblingIndex(0);
+        var rect = Bck.GetComponent<RectTransform>();
+        rect.offsetMax = new Vector2(0, 0);
+        rect.offsetMin = new Vector2(0, 0);
+        activeBackground[0] = Bck;
     }
 
     //Press enter or click on option 
@@ -200,12 +163,13 @@ public class MenuController : MonoBehaviour {
     //Function to go foward in the menu
     public void moveRight()
     {
-        if(option < options.Length-1)
+        if (option < options.Length - 1)
         {
             option = option + 1;
             ArrowR.SetBool("Click", true);
             Audio.clip = Select;
             Audio.Play();
+            About.SetActive(false);
         }
     }
 
@@ -218,9 +182,10 @@ public class MenuController : MonoBehaviour {
             ArrowL.SetBool("Click", true);
             Audio.clip = Select;
             Audio.Play();
+            About.SetActive(false);
         }
     }
-    
+
     //New Game event
     public void newGame()
     {
@@ -237,13 +202,17 @@ public class MenuController : MonoBehaviour {
     //Select scene Event
     public void selectScene()
     {
-        Destroy(activeBackground[0]);
         //Instantiate all the backgrounds for the scenes
         //If using the parallax option the parallax backgrounds are spawned
         if (useParallax)
         {
-            for (int i = backgroundsParallax.Length-1; i > -1; i--)
+            for (int i = backgroundsParallax.Length - 1; i > -1; i--)
             {
+                if (option == 1)
+                {
+                    About.SetActive(true);
+                }
+                if (backgroundsParallax[i] == null) { continue; }
                 var bck = Instantiate(backgroundsParallax[i]) as GameObject;
                 var rect = bck.GetComponent<RectTransform>();
                 bck.transform.SetParent(backgroundsController.transform);
@@ -257,25 +226,6 @@ public class MenuController : MonoBehaviour {
                 menuBar.SetActive(false);
                 mainMenu = false;
             }
-
-        //If not, we spawn the normal backgrounds
-        }else
-        {
-            for (int i = backgrounds.Length - 1; i > -1; i--)
-            {
-                var bck = Instantiate(backgrounds[i]) as GameObject;
-                var rect = bck.GetComponent<RectTransform>();
-                bck.transform.SetParent(backgroundsController.transform);
-                bck.transform.localScale = Vector3.one;
-                bck.transform.localPosition = Vector3.zero;
-                bck.transform.SetSiblingIndex(0);
-                var thisRect = gameObject.GetComponent<RectTransform>();
-                rect.offsetMax = new Vector2((thisRect.rect.width * i), 0);
-                rect.offsetMin = new Vector2(thisRect.rect.width * i , 0);
-                activeBackground[i] = bck;
-                menuBar.SetActive(false);
-                mainMenu = false;
-            }
         }
     }
 
@@ -285,7 +235,6 @@ public class MenuController : MonoBehaviour {
         //First check if we are animating and if we are not in the last scene
         if (!isAnimating && activeScene < activeBackground.Length)
         {
-            Audio.clip = SceneSelect;
             Audio.Play();
             //Then create a new clip and a curve to animate the scenes moving
             var clip = new AnimationClip();
@@ -298,7 +247,7 @@ public class MenuController : MonoBehaviour {
             //Now we check the distance between 2 scenes to move then
             float distance = Vector3.Distance(activeBackground[0].transform.localPosition, activeBackground[1].transform.localPosition);
             //Set the curve with the data
-            curve = AnimationCurve.Linear(0, (backgroundsController.transform.localPosition.x), animSpeed, (distance * -1)*activeScene);
+            curve = AnimationCurve.Linear(0, (backgroundsController.transform.localPosition.x), animSpeed, (distance * -1) * activeScene);
             Debug.Log(distance * activeScene);
             clip.SetCurve("", typeof(Transform), "localPosition.x", curve);
             //And play the animation
@@ -331,16 +280,27 @@ public class MenuController : MonoBehaviour {
             //Now we check the distance between 2 scenes to move then
             float distance = Vector3.Distance(activeBackground[0].transform.localPosition, activeBackground[1].transform.localPosition);
             //Set the curve with the data
-            curve = AnimationCurve.Linear(0, (backgroundsController.transform.localPosition.x), animSpeed, distance*(activeScene-1)*-1);
-            Debug.Log(distance*(activeScene - 1));
+            curve = AnimationCurve.Linear(0, (backgroundsController.transform.localPosition.x), animSpeed, distance * (activeScene - 1) * -1);
+            Debug.Log(distance * (activeScene - 1));
             clip.SetCurve("", typeof(Transform), "localPosition.x", curve);
             //And play the animation
             anim.AddClip(clip, "b");
             anim.Play("b");
             //We also keep the count of the active scene in this variable
             //Now we put the active scene in the first sibling index to activate the parallax effect
-            activeBackground[activeScene ].transform.SetAsLastSibling();
+            activeBackground[activeScene].transform.SetAsLastSibling();
         }
+    }
+    public void OpenAbout()
+    {
+        About.SetActive(true);
+        mainMenu = false;
+    }
+
+    public void CloseAbout()
+    {
+        About.SetActive(false);
+        mainMenu = true;
     }
 
     //Closes the scenes menu
@@ -391,6 +351,6 @@ public class MenuController : MonoBehaviour {
         OptionsMenu.gameObject.GetComponent<Animation>().Play("Fade out");
         mainMenu = true;
     }
+    public bool isPaused = false;  // lub public bool IsPaused { get; } dla getter-a
 
 }
-

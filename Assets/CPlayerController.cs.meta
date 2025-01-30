@@ -3,7 +3,12 @@ guid: 2f3c33af4baedb94fb2b848a3016dc33
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - ItemBomb: {fileID: 2810218958394278742, guid: 2f7c64735a554ca48a1e045350bd904d, type: 3}
+  - ItemBombPickup: {fileID: 11400000, guid: 49f24790d481bfe45867d180e370aafc, type: 2}
+  - ani: {instanceID: 0}
+  - playerStats: {instanceID: 0}
+  - mainCamera: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -5276,18 +5276,16 @@ MonoBehaviour:
   - Select Scene
   - 'Options '
   - Exit
-  backgrounds: []
   backgroundsParallax: []
   mainBackgroundParallax: {fileID: 0}
-  mainBackground: {fileID: 0}
   menuText: {fileID: 11431708}
   activeBackground: []
   ArrowR: {fileID: 9577292}
   ArrowL: {fileID: 9560616}
   menuBar: {fileID: 123146}
   backgroundsController: {fileID: 152512}
+  About: {fileID: 123392, guid: 1105e7208cf451b46b8b3ee010715cd1, type: 3}
   Select: {fileID: 0}
-  SceneSelect: {fileID: 0}
   Events:
   - m_PersistentCalls:
       m_Calls:

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -21,9 +22,13 @@ public class PlayerStats : MonoBehaviour
     private float baseAttackPower;
     private float baseDefense;
 
+    public GameObject WinCond;
+
     public bool dead = false;
 
     public HealthBar healthBar;
+
+    public Animator ani; // Animator postaci
 
     void Start()
     {
@@ -32,13 +37,26 @@ public class PlayerStats : MonoBehaviour
         baseMoveSpeed = moveSpeed;
         baseAttackPower = attackPower;
         baseDefense = defense;
+
+        if (WinCond == null)
+        {
+            WinCond = GameObject.Find("WinCond");
+        }
     }
 
     void Update()
     {
+        if (WinCond.activeSelf)
+        {
+            // Wait for 3 and switch to scene "Win"
+            StartCoroutine(WaitAndSwitchScene(3, "Win"));
+        }
+
         if (currentHealth <= 0)
         {
             dead = true;
+            // Wait for 3 and switch to scene "GameOver"
+            StartCoroutine(WaitAndSwitchScene(3, "Lose"));
         }
         else
         {
@@ -46,10 +64,10 @@ public class PlayerStats : MonoBehaviour
         }
         
         healthBar.SetHp(currentHealth/maxHealth);
-        Debug.Log("Regen" + healthRegenerationRate);
+        //Debug.Log("Regen" + healthRegenerationRate);
     if (healthRegenerationRate > 0 && currentHealth < maxHealth && regenerationTimeElapsed < healthRegenerationRate)
         {
-            Debug.Log("Regeneracja zdrowia");
+            //Debug.Log("Regeneracja zdrowia");
 
             currentHealth += healthRegenerationRate * Time.deltaTime;
             currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
@@ -58,10 +76,17 @@ public class PlayerStats : MonoBehaviour
         }
         else if (currentHealth >= maxHealth || regenerationTimeElapsed >= healthRegenerationRate)
         {
-            Debug.Log("Regeneracja zakończona");
+            //Debug.Log("Regeneracja zakończona");
             regenerationTimeElapsed = 0f;
             healthRegenerationRate = 0f;
         }
+    }
+
+    IEnumerator WaitAndSwitchScene(float time, string sceneName)
+    {
+        yield return new WaitForSeconds(time);
+        
+        SceneManager.LoadScene(sceneName);
     }
 
     public void TakeDamage(float damage)
@@ -74,7 +99,9 @@ public class PlayerStats : MonoBehaviour
         {
             dead = true;
         }
-            
+
+        ani.SetTrigger("Hit");
+
     }
 
     public void Heal(float amount)

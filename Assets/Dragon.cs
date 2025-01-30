@@ -2,12 +2,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Dragon : MonoBehaviour
 {
     private int HP = 100;
     public Slider healthBar;
     public Animator animator;
+
+    private float lastAttackTime = 0f;
+    public float attackDelay = 5f;
+
+    public GameObject WinCond;
+
+    private void Start()
+    {
+        if (healthBar != null)
+        {
+            healthBar.maxValue = HP;
+            healthBar.value = HP;
+        }
+        if (WinCond == null)
+        {
+            WinCond = GameObject.Find("WinCond");
+        }
+    }
 
     private void Update()
     {
@@ -22,7 +41,8 @@ public class Dragon : MonoBehaviour
             {
                 animator.SetTrigger("die");
             }
-            Destroy(gameObject, 5f); // Usuñ obiekt po 2 sekundach
+            Destroy(gameObject, 2f);
+            WinCond.SetActive(true);
         }
         else
         {
@@ -33,4 +53,24 @@ public class Dragon : MonoBehaviour
         }
     }
 
+    public void PerformAttack(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            PlayerStats player = other.GetComponent<PlayerStats>();
+            if (player != null)
+            {
+                player.TakeDamage(10); // Zadaj obra¿enia graczowi
+            }
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (Time.time - lastAttackTime > attackDelay)
+        {
+            PerformAttack(other);
+            lastAttackTime = Time.time;
+        }
+    }
 }
