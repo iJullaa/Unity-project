@@ -31,6 +31,7 @@ The main goal of the game is to explore the map, collect items, and defeat the b
 ```bash
 git clone https://github.com/iJullaa/Unity-project.git
 
+```
 Open the project in Unity Hub.
 
 Open the main scene from the Assets folder.
