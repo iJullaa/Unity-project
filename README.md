@@ -8,7 +8,7 @@ You can watch a short video demonstration of the project here:
 
 [![Watch the video](https://img.youtube.com/vi/vjZh062c0eY/0.jpg)](https://youtu.be/vjZh062c0eY)
 
-## 🛠 Features
+##  Features
 
 - Unity-based game project
 - Interactive gameplay mechanics
